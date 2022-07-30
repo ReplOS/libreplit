@@ -30,7 +30,7 @@
 #pragma once
 
 #if !defined(REPLIT_INSIDE) && !defined(REPLIT_COMPILATION)
-# error "Only <replit.h> can be included directly."
+#error "Only <replit.h> can be included directly."
 #endif
 
 /**

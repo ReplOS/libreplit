@@ -34,7 +34,7 @@
 G_BEGIN_DECLS
 
 #define REPLIT_INSIDE
-# include "replit-version.h"
+#include "replit-version.h"
 #undef REPLIT_INSIDE
 
 G_END_DECLS
