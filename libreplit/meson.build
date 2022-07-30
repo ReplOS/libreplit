@@ -29,7 +29,8 @@ configure_file(
 
 replit_deps = [
   dependency('gio-2.0', version: '>= 2.50'),
-  dependency('libgraphqlparser', version: '>= 7.0'),
+  dependency('json-glib-1.0', version: '>= 1.6'),
+  dependency('libsoup-3.0', version: '>= 3.0'),
 ]
 
 replit_lib = shared_library('replit-' + api_version,
@@ -43,7 +44,7 @@ install_headers(replit_headers, subdir: 'replit')
 pkg = import('pkgconfig')
 
 pkg.generate(
-  description: 'A shared library for ...',
+  description: 'A C library for interacting with Replit and its API',
     libraries: replit_lib,
          name: 'replit',
      filebase: 'replit-' + api_version,
