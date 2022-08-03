@@ -1,4 +1,4 @@
-/* replit.h
+/* replit-client.h
  *
  * Copyright 2022 Patrick Winters
  *
@@ -29,13 +29,51 @@
 
 #pragma once
 
+#if !defined(REPLIT_INSIDE) && !defined(REPLIT_COMPILATION)
+#error "Only <replit.h> can be included directly."
+#endif
+
 #include <glib.h>
+#include <json-glib/json-glib.h>
 
 G_BEGIN_DECLS
 
-#define REPLIT_INSIDE
-#include "replit-client.h"
-#include "replit-version.h"
-#undef REPLIT_INSIDE
+#define REPLIT_CLIENT_DEFAULT_DOMAIN "replit.com"
+#define REPLIT_CLIENT_DEFAULT_PATH   "/graphql"
+
+GQuark replit_client_error_quark(void);
+#define REPLIT_CLIENT_ERROR replit_client_error_quark()
+
+typedef enum {
+	REPLIT_CLIENT_ERROR_RESPONSE_STATUS,
+	REPLIT_CLIENT_ERROR_GRAPHQL_ERROR,
+	REPLIT_CLIENT_ERROR_GRAPHQL_EMPTY
+} ReplitClientError;
+
+#define REPLIT_TYPE_CLIENT replit_client_get_type()
+G_DECLARE_FINAL_TYPE (ReplitClient, replit_client, REPLIT, CLIENT, GObject)
+
+ReplitClient* replit_client_new(const gchar* token);
+
+ReplitClient* replit_client_new_with_domain(
+	const gchar* token,
+	const gchar* domain,
+	const gchar* path
+);
+
+JsonNode* replit_client_query(
+	ReplitClient* client,
+	const gchar* query,
+	JsonNode* variables,
+	GError** error
+);
+
+GObject* replit_client_query_to_object(
+	ReplitClient* client,
+	const gchar* query,
+	JsonNode* variables,
+	GType gtype,
+	GError** error
+);
 
 G_END_DECLS
