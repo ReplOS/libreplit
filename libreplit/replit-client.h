@@ -38,7 +38,7 @@
 
 G_BEGIN_DECLS
 
-#define REPLIT_CLIENT_DEFAULT_DOMAIN "replit.com"
+#define REPLIT_DOMAIN "replit.com"
 
 GQuark replit_client_error_quark(void);
 #define REPLIT_CLIENT_ERROR replit_client_error_quark()
@@ -53,11 +53,6 @@ typedef enum {
 G_DECLARE_FINAL_TYPE (ReplitClient, replit_client, REPLIT, CLIENT, GObject)
 
 ReplitClient* replit_client_new(const gchar* token);
-
-ReplitClient* replit_client_new_with_domain(
-	const gchar* token,
-	const gchar* domain
-);
 
 JsonNode* replit_client_query(
 	ReplitClient* client,

@@ -40,34 +40,18 @@ struct _ReplitClient {
 	GObject parent_instance;
 
 	const gchar* token;
-	const gchar* domain;
 	SoupSession* session;
 };
 
 G_DEFINE_TYPE (ReplitClient, replit_client, G_TYPE_OBJECT)
 
-static void replit_client_class_init(
-	ReplitClientClass* _klass __attribute__((unused))
-) {}
-
-static void replit_client_init(ReplitClient* self) {
-	self->domain = REPLIT_CLIENT_DEFAULT_DOMAIN;
-}
+static void replit_client_class_init(ReplitClientClass* _klass __attribute__((unused))) {}
+static void replit_client_init(ReplitClient* self __attribute__((unused))) {}
 
 ReplitClient* replit_client_new(const gchar* token) {
-	return replit_client_new_with_domain(
-		token,
-		REPLIT_CLIENT_DEFAULT_DOMAIN
-	);
-}
-
-ReplitClient* replit_client_new_with_domain(
-	const gchar* token,
-	const gchar* domain
-) {
 	SoupSession* session = soup_session_new();
 
-	SoupCookie* cookie = soup_cookie_new(TOKEN_COOKIE, token, domain, "/", -1);
+	SoupCookie* cookie = soup_cookie_new(TOKEN_COOKIE, token, REPLIT_DOMAIN, "/", -1);
 
 	SoupCookieJar* jar = soup_cookie_jar_new();
 	soup_cookie_jar_add_cookie(jar, cookie);
@@ -77,7 +61,6 @@ ReplitClient* replit_client_new_with_domain(
 	return g_object_new(
 		REPLIT_TYPE_CLIENT,
 		"token", token,
-		"domain", domain,
 		"session", session,
 		NULL
 	);
@@ -116,7 +99,7 @@ JsonNode* replit_client_query(
 
 	g_free(req_body);
 
-	GUri* uri = g_uri_build(0, "https", NULL, self->domain, -1, "/graphql", NULL, NULL);
+	GUri* uri = g_uri_build(0, "https", NULL, REPLIT_DOMAIN, -1, "/graphql", NULL, NULL);
 	SoupMessage* msg = soup_message_new_from_uri(SOUP_METHOD_POST, uri);
 	soup_message_set_request_body_from_bytes(msg, "application/json", req_bytes);
 
