@@ -39,7 +39,6 @@
 G_BEGIN_DECLS
 
 #define REPLIT_CLIENT_DEFAULT_DOMAIN "replit.com"
-#define REPLIT_CLIENT_DEFAULT_PATH   "/graphql"
 
 GQuark replit_client_error_quark(void);
 #define REPLIT_CLIENT_ERROR replit_client_error_quark()
@@ -57,8 +56,7 @@ ReplitClient* replit_client_new(const gchar* token);
 
 ReplitClient* replit_client_new_with_domain(
 	const gchar* token,
-	const gchar* domain,
-	const gchar* path
+	const gchar* domain
 );
 
 JsonNode* replit_client_query(

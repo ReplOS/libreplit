@@ -41,7 +41,6 @@ struct _ReplitClient {
 
 	const gchar* token;
 	const gchar* domain;
-	const gchar* path;
 	SoupSession* session;
 };
 
@@ -53,21 +52,18 @@ static void replit_client_class_init(
 
 static void replit_client_init(ReplitClient* self) {
 	self->domain = REPLIT_CLIENT_DEFAULT_DOMAIN;
-	self->path = REPLIT_CLIENT_DEFAULT_PATH;
 }
 
 ReplitClient* replit_client_new(const gchar* token) {
 	return replit_client_new_with_domain(
 		token,
-		REPLIT_CLIENT_DEFAULT_DOMAIN,
-		REPLIT_CLIENT_DEFAULT_PATH
+		REPLIT_CLIENT_DEFAULT_DOMAIN
 	);
 }
 
 ReplitClient* replit_client_new_with_domain(
 	const gchar* token,
-	const gchar* domain,
-	const gchar* path
+	const gchar* domain
 ) {
 	SoupSession* session = soup_session_new();
 
@@ -82,7 +78,6 @@ ReplitClient* replit_client_new_with_domain(
 		REPLIT_TYPE_CLIENT,
 		"token", token,
 		"domain", domain,
-		"path", path,
 		"session", session,
 		NULL
 	);
@@ -121,7 +116,7 @@ JsonNode* replit_client_query(
 
 	g_free(req_body);
 
-	GUri* uri = g_uri_build(0, "https", NULL, self->domain, -1, self->path, NULL, NULL);
+	GUri* uri = g_uri_build(0, "https", NULL, self->domain, -1, "/graphql", NULL, NULL);
 	SoupMessage* msg = soup_message_new_from_uri(SOUP_METHOD_POST, uri);
 	soup_message_set_request_body_from_bytes(msg, "application/json", req_bytes);
 
