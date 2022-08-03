@@ -1,10 +1,12 @@
 api_version = '0.1'
 
 replit_sources = [
+  'replit-client.c',
   'replit.c',
 ]
 
 replit_headers = [
+  'replit-client.h',
   'replit.h',
 ]
 
@@ -35,6 +37,7 @@ replit_deps = [
 
 replit_lib = shared_library('replit-' + api_version,
   replit_sources,
+  c_args: ['-DREPLIT_COMPILATION'],
   dependencies: replit_deps,
   install: true,
 )
