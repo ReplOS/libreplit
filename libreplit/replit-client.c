@@ -31,6 +31,7 @@
 #include <libsoup/soup.h>
 
 #include "replit-client.h"
+#include "replit-version.h"
 
 #define TOKEN_COOKIE "connect.sid"
 
@@ -125,6 +126,11 @@ JsonNode* replit_client_query(
 	GUri* uri = g_uri_build(0, "https", NULL, REPLIT_DOMAIN, -1, "/graphql", NULL, NULL);
 	SoupMessage* msg = soup_message_new_from_uri(SOUP_METHOD_POST, uri);
 	soup_message_set_request_body_from_bytes(msg, "application/json", req_bytes);
+
+	SoupMessageHeaders* headers = soup_message_get_request_headers(msg);
+	soup_message_headers_append(headers, "Referrer", "https://replit.com/");
+	soup_message_headers_append(headers, "X-Requested-With", "XMLHttpRequest");
+	soup_message_headers_append(headers, "X-Libreplit-Version", REPLIT_VERSION_S);
 
 	GInputStream* stream = soup_session_send(self->session, msg, NULL, error);
 
