@@ -41,12 +41,34 @@ struct _ReplitClient {
 
 	const gchar* token;
 	SoupSession* session;
+	SoupCookieJar* jar;
 };
 
 G_DEFINE_TYPE (ReplitClient, replit_client, G_TYPE_OBJECT)
 
-static void replit_client_class_init(ReplitClientClass* _klass __attribute__((unused))) {}
+static void replit_client_class_init(ReplitClientClass* klass) {
+	GObjectClass* object_class = G_OBJECT_CLASS (klass);
+
+	object_class->dispose = replit_client_dispose;
+	object_class->finalize = replit_client_finalize;
+}
+
 static void replit_client_init(ReplitClient* self __attribute__((unused))) {}
+
+static void replit_client_dispose(GObject* gobject) {
+	ReplitClient* self = REPLIT_CLIENT (gobject);
+
+	g_clear_object(&self->session);
+	g_clear_object(&self->jar);
+
+	G_OBJECT_CLASS (replit_client_parent_class)->dispose(gobject);
+}
+
+static void replit_client_finalize(GObject* gobject) {
+	// free other stuff?
+
+	G_OBJECT_CLASS (replit_client_parent_class)->finalize(gobject);
+}
 
 ReplitClient* replit_client_new(const gchar* token) {
 	SoupSession* session = soup_session_new();
@@ -62,6 +84,7 @@ ReplitClient* replit_client_new(const gchar* token) {
 		REPLIT_TYPE_CLIENT,
 		"token", token,
 		"session", session,
+		"jar", jar,
 		NULL
 	);
 }
