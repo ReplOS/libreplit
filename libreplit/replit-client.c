@@ -37,6 +37,20 @@
 
 G_DEFINE_QUARK (REPLIT_CLIENT_ERROR, replit_client_error)
 
+/**
+ * ReplitClient:
+ * 
+ * Represents a logged-in session for making API queries to Replit.
+ * 
+ * A #ReplitClient can be created with [ctor@Client.new], which requires passing
+ * a token. This token corresponds to Replit's `connect.sid` cookie, and can be
+ * obtained either manually, or by using [func@Client.login] to create one by
+ * simulating a login with a username and password.
+ * 
+ * Whilst the inner properties may be accessible, it is advised against using
+ * them. All regular usage should be possible through the provided public API.
+ */
+
 struct _ReplitClient {
 	GObject parent_instance;
 
@@ -74,6 +88,14 @@ static void replit_client_finalize(GObject *gobject) {
 	G_OBJECT_CLASS (replit_client_parent_class)->finalize(gobject);
 }
 
+/**
+ * replit_client_new:
+ * @token: (transfer none): The token to use as the `connect.sid` cookie.
+ * 
+ * Creates a new #ReplitClient with the given login token.
+ * 
+ * Returns: (transfer full): The new #ReplitClient.
+ */
 ReplitClient *replit_client_new(const gchar *token) {
 	SoupSession *session = soup_session_new();
 
@@ -93,6 +115,19 @@ ReplitClient *replit_client_new(const gchar *token) {
 	);
 }
 
+/**
+ * replit_client_query:
+ * @client: The client.
+ * @query: (transfer none): The GraphQL query or mutation to perform.
+ * @variables: (transfer full) (nullable): Any variables to pass with the query.
+ * 
+ * Sends a GraphQL query or mutation to Replit to perform as the current user.
+ * 
+ * If @variables is %NULL, an empty object will be sent in its place. Otherwise,
+ * it should usually be an object containing any variables used by the query.
+ * 
+ * Returns: (transfer full) (nullable): The returned data, or %NULL on error.
+ */
 JsonNode *replit_client_query(
 	ReplitClient *self,
 	const gchar *query,
@@ -265,6 +300,21 @@ JsonNode *replit_client_query(
 	return data_node;
 }
 
+/**
+ * replit_client_query_to_object:
+ * @client: The client.
+ * @query: (transfer none): The GraphQL query or mutation to perform.
+ * @variables: (transfer full) (nullable): Any variables to pass with the query.
+ * @gtype: The object type to convert the response data to.
+ * 
+ * Sends a GraphQL query or mutation to Replit to perform as the current user,
+ * and convert the response data to a GObject of the given type.
+ * 
+ * Internally, this method calls [method@Client.query] with its arguments, and
+ * then uses GObject to turn the #JsonNode into the object.
+ * 
+ * Returns: (transfer full) (nullable): The object, or %NULL on error.
+ */
 GObject *replit_client_query_to_object(
 	ReplitClient *self,
 	const gchar *query,
@@ -280,6 +330,23 @@ GObject *replit_client_query_to_object(
 	return object;
 }
 
+/**
+ * replit_client_login:
+ * @username: (transfer none): The username to login with.
+ * @password: (transfer none): The password to login with.
+ * @captcha: (transfer none): The hCaptcha reponse key to send with the request.
+ * 
+ * Performs a login request with the given credentials to obtain a token.
+ * 
+ * Only password-based authentication is supported; you cannot obtain a token
+ * with OAuth-based authentication using this library.
+ * 
+ * To obtain a code for @captcha, you must run the hCaptcha client library (in
+ * JavaScript), which may require a human user to interactively solve a CAPTCHA
+ * challenge.
+ * 
+ * Returns: (transfer full) (nullable): The obtained token, or %NULL on error.
+ */
 gchar *replit_client_login(
 	const gchar *username,
 	const gchar *password,

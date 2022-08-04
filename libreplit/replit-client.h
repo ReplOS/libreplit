@@ -38,16 +38,69 @@
 
 G_BEGIN_DECLS
 
+/**
+ * REPLIT_DOMAIN:
+ * 
+ * The host name connected to by #ReplitClient.
+ * 
+ * It may be useful to library users performing other requests to Replit. This
+ * is not configurable at runtime.
+ */
 #define REPLIT_DOMAIN "replit.com"
+
+/**
+ * REPLIT_HC_KEY:
+ * 
+ * Replit's unique hCaptcha site key.
+ * 
+ * This may be useful to library users needing to present a hCaptcha CAPTCHA to
+ * their human end-users for authentication purposes. It should only be directly
+ * useful to the hCaptcha client library.
+ */
 #define REPLIT_HC_KEY "473079ba-e99f-4e25-a635-e9b661c7dd3e"
 
+/**
+ * replit_client_error_quark: (skip)
+ * 
+ * Creates and returns the quark for #ReplitClientError.
+ * 
+ * Returns: The created quark.
+ */
 GQuark replit_client_error_quark(void);
 #define REPLIT_CLIENT_ERROR replit_client_error_quark()
 
+/**
+ * ReplitClientError:
+ * 
+ * Error codes to be returned by #ReplitClient methods.
+ */
 typedef enum {
+	/**
+	 * REPLIT_CLIENT_ERROR_RESPONSE_STATUS:
+	 * 
+	 * Replit returned an error (non-200) in the response status code.
+	 */
 	REPLIT_CLIENT_ERROR_RESPONSE_STATUS,
+
+	/**
+	 * REPLIT_CLIENT_ERROR_LOGIN_FAILED:
+	 * 
+	 * Replit refused to log in with the provided credentials.
+	 */
 	REPLIT_CLIENT_ERROR_LOGIN_FAILED,
+
+	/**
+	 * REPLIT_CLIENT_ERROR_GRAPHQL_ERROR:
+	 * 
+	 * Replit returned a GraphQL response containing at least one error.
+	 */
 	REPLIT_CLIENT_ERROR_GRAPHQL_ERROR,
+
+	/**
+	 * REPLIT_CLIENT_ERROR_GRAPHQL_EMPTY:
+	 * 
+	 * Replit returned a GraphQL response containing no data.
+	 */
 	REPLIT_CLIENT_ERROR_GRAPHQL_EMPTY,
 } ReplitClientError;
 
