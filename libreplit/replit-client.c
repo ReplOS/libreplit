@@ -47,6 +47,9 @@ struct _ReplitClient {
 
 G_DEFINE_TYPE (ReplitClient, replit_client, G_TYPE_OBJECT)
 
+static void replit_client_dispose(GObject* gobject);
+static void replit_client_finalize(GObject* gobject);
+
 static void replit_client_class_init(ReplitClientClass* klass) {
 	GObjectClass* object_class = G_OBJECT_CLASS (klass);
 
