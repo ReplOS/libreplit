@@ -39,14 +39,16 @@
 G_BEGIN_DECLS
 
 #define REPLIT_DOMAIN "replit.com"
+#define REPLIT_HC_KEY "473079ba-e99f-4e25-a635-e9b661c7dd3e"
 
 GQuark replit_client_error_quark(void);
 #define REPLIT_CLIENT_ERROR replit_client_error_quark()
 
 typedef enum {
 	REPLIT_CLIENT_ERROR_RESPONSE_STATUS,
+	REPLIT_CLIENT_ERROR_LOGIN_FAILED,
 	REPLIT_CLIENT_ERROR_GRAPHQL_ERROR,
-	REPLIT_CLIENT_ERROR_GRAPHQL_EMPTY
+	REPLIT_CLIENT_ERROR_GRAPHQL_EMPTY,
 } ReplitClientError;
 
 #define REPLIT_TYPE_CLIENT replit_client_get_type()
@@ -66,6 +68,13 @@ GObject* replit_client_query_to_object(
 	const gchar* query,
 	JsonNode* variables,
 	GType gtype,
+	GError** error
+);
+
+gchar* replit_client_login(
+	const gchar* username,
+	const gchar* password,
+	const gchar* captcha,
 	GError** error
 );
 

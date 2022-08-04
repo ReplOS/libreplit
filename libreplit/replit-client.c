@@ -276,3 +276,111 @@ GObject* replit_client_query_to_object(
 
 	return object;
 }
+
+gchar* replit_client_login(
+	const gchar* username,
+	const gchar* password,
+	const gchar* captcha,
+	GError** error
+) {
+	JsonBuilder* builder = json_builder_new();
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "username");
+	json_builder_add_string_value(builder, username);
+	json_builder_set_member_name(builder, "password");
+	json_builder_add_string_value(builder, password);
+	json_builder_set_member_name(builder, "teacher");
+	json_builder_add_boolean_value(builder, FALSE);
+	json_builder_set_member_name(builder, "hCaptchaResponse");
+	json_builder_add_string_value(builder, captcha);
+	json_builder_set_member_name(builder, "hCaptchaSiteKey");
+	json_builder_add_string_value(builder, REPLIT_HC_KEY);
+	json_builder_end_object(builder);
+
+	JsonGenerator* generator = json_generator_new();
+	JsonNode* builder_root = json_builder_get_root(builder);
+	json_generator_set_root(generator, builder_root);
+
+	gsize req_length;
+	gchar* req_body = json_generator_to_data(generator, &req_length);
+
+	g_object_unref(builder);
+	g_object_unref(generator);
+	g_object_unref(builder_root);
+
+	GBytes* req_bytes = g_bytes_new(req_body, req_length);
+
+	g_free(req_body);
+
+	GUri* uri = g_uri_build(0, "https", NULL, REPLIT_DOMAIN, -1, "/login", NULL, NULL);
+	SoupMessage* msg = soup_message_new_from_uri(SOUP_METHOD_POST, uri);
+	soup_message_set_request_body_from_bytes(msg, "application/json", req_bytes);
+	
+	SoupMessageHeaders* headers = soup_message_get_request_headers(msg);
+	soup_message_headers_append(headers, "Referrer", "https://replit.com/");
+	soup_message_headers_append(headers, "User-Agent", "Mozilla/5.0");
+	soup_message_headers_append(headers, "X-Requested-With", "XMLHttpRequest");
+	soup_message_headers_append(headers, "X-Libreplit-Version", REPLIT_VERSION_S);
+
+	SoupSession* session = soup_session_new();
+
+	GInputStream* stream = soup_session_send(session, msg, NULL, error);
+
+	SoupStatus status = soup_message_get_status(msg);
+
+	g_object_unref(uri);
+	g_object_unref(session);
+
+	if (stream == NULL) {
+		g_object_unref(msg);
+
+		return NULL;
+	}
+
+	g_object_unref(stream);
+
+	if (status != SOUP_STATUS_OK) {
+		g_set_error(
+			error,
+			REPLIT_CLIENT_ERROR,
+			REPLIT_CLIENT_ERROR_RESPONSE_STATUS,
+			"Server responded with status %d",
+			status
+		);
+
+		g_object_unref(msg);
+
+		return NULL;
+	}
+
+	GSList* cookies = soup_cookies_from_response(msg);
+	gchar* token = NULL;
+
+	for (GSList* this = cookies; this; this = this->next) {
+		SoupCookie* cookie = this->data;
+		const char* cookie_name = soup_cookie_get_name(cookie);
+
+		if (!g_str_equal(cookie_name, TOKEN_COOKIE)) continue;
+
+		const char* cookie_value = soup_cookie_get_value(cookie);
+		token = g_strdup(cookie_value);
+		
+		break;
+	}
+
+	g_object_unref(msg);
+	g_slist_free(cookies);
+
+	if (token == NULL) {
+		g_set_error_literal(
+			error,
+			REPLIT_CLIENT_ERROR,
+			REPLIT_CLIENT_ERROR_LOGIN_FAILED,
+			"Server provided no token cookie"
+		);
+
+		return NULL;
+	}
+
+	return token;
+}
