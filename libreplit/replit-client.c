@@ -323,6 +323,7 @@ GObject *replit_client_query_to_object(
 	GError **error
 ) {
 	JsonNode *data = replit_client_query(self, query, variables, error);
+	if (data == NULL) return NULL;
 	GObject *object = json_gobject_deserialize(gtype, data);
 
 	g_object_unref(data);
