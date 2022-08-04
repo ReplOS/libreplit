@@ -26,7 +26,7 @@ configure_file(
   output: 'replit-version.h',
   configuration: version_conf,
   install: true,
-  install_dir: join_paths(get_option('includedir'), 'replit')
+  install_dir: join_paths(get_option('includedir'), 'libreplit')
 )
 
 replit_deps = [
@@ -35,24 +35,48 @@ replit_deps = [
   dependency('libsoup-3.0', version: '>= 3.0'),
 ]
 
-replit_lib = shared_library('replit-' + api_version,
+libreplit = shared_library('replit-' + api_version,
   replit_sources,
   c_args: ['-DREPLIT_COMPILATION'],
   dependencies: replit_deps,
   install: true,
 )
 
-install_headers(replit_headers, subdir: 'replit')
+install_headers(replit_headers, subdir: 'libreplit')
+
+gnome = import('gnome')
+
+gir = find_program('g-ir-scanner', required: get_option('introspection'))
+build_gir = gir.found() and get_option('introspection').enabled()
+
+if build_gir
+  gir_args = ['-DREPLIT_COMPILATION', '--quiet']
+
+  libreplit_gir = gnome.generate_gir(libreplit,
+    sources: [replit_sources, replit_headers],
+    namespace: 'Replit',
+    nsversion: api_version,
+    identifier_prefix: 'Replit',
+    symbol_prefix: 'replit',
+    export_packages: 'libreplit',
+    includes: ['Gio-2.0', 'Json-1.0', 'Soup-3.0'],
+    header: 'libreplit/replit.h',
+    install: true,
+    dependencies: replit_deps,
+    extra_args: gir_args,
+    fatal_warnings: get_option('werror'),
+  )
+endif
 
 pkg = import('pkgconfig')
 
 pkg.generate(
   description: 'A C library for interacting with Replit and its API',
-    libraries: replit_lib,
+    libraries: libreplit,
          name: 'replit',
      filebase: 'replit-' + api_version,
       version: meson.project_version(),
-      subdirs: 'replit',
+      subdirs: 'libreplit',
      requires: 'glib-2.0',
   install_dir: join_paths(get_option('libdir'), 'pkgconfig')
 )

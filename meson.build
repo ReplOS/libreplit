@@ -17,4 +17,9 @@ add_project_arguments([
   '-I' + meson.project_build_root(),
 ], language: 'c')
 
+replit_prefix = get_option('prefix')
+replit_datadir = join_paths(replit_prefix, get_option('datadir'))
+
 subdir('libreplit')
+
+subdir('docs/reference')

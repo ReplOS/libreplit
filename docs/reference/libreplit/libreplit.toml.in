@@ -1,0 +1,36 @@
+[library]
+version = "@version@"
+browse_url = "https://github.com/ReplOS/libreplit"
+repository_url = "https://github.com/ReplOS/libreplit.git"
+website_url = "https://github.com/ReplOS/libreplit#readme"
+authors = "Patrick Winters <19wintersp@gmail.com>"
+license = "MIT"
+
+dependencies = ["gio-2.0", "json-glib-1.0", "libsoup-3.0"]
+
+[dependencies."gio-2.0"]
+name = "GIO"
+description = "GObject Interfaces and Objects, Networking, IPC, and I/O"
+docs_url = "https://docs.gtk.org/gio/"
+
+[dependencies."json-glib-1.0"]
+name = "Json"
+description = "JSON parser and generator"
+docs_url = "https://gnome.pages.gitlab.gnome.org/json-glib/"
+
+[dependencies."libsoup-3.0"]
+name = "Soup"
+description = "HTTP client/server library for GNOME"
+docs_url = "https://libsoup.org/libsoup-3.0/"
+
+[theme]
+name = "basic"
+show_index_summary = true
+show_class_hierarchy = true
+
+[source-location]
+base_url = "https://github.com/ReplOS/libreplit/blob/master/"
+
+[extra]
+content_files = []
+content_images = []

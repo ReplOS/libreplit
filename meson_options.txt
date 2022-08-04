@@ -1,0 +1,14 @@
+option(
+	'docs',
+	type: 'boolean',
+	value: false,
+	description : 'Build API reference and tools documentation',
+)
+
+option(
+	'introspection',
+	type: 'feature',
+	value: 'auto',
+	yield: true,
+	description : 'Build introspection data (requires gobject-introspection)',
+)
