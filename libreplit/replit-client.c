@@ -40,27 +40,27 @@ G_DEFINE_QUARK (REPLIT_CLIENT_ERROR, replit_client_error)
 struct _ReplitClient {
 	GObject parent_instance;
 
-	const gchar* token;
-	SoupSession* session;
-	SoupCookieJar* jar;
+	const gchar *token;
+	SoupSession *session;
+	SoupCookieJar *jar;
 };
 
 G_DEFINE_TYPE (ReplitClient, replit_client, G_TYPE_OBJECT)
 
-static void replit_client_dispose(GObject* gobject);
-static void replit_client_finalize(GObject* gobject);
+static void replit_client_dispose(GObject *gobject);
+static void replit_client_finalize(GObject *gobject);
 
-static void replit_client_class_init(ReplitClientClass* klass) {
-	GObjectClass* object_class = G_OBJECT_CLASS (klass);
+static void replit_client_class_init(ReplitClientClass *klass) {
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	object_class->dispose = replit_client_dispose;
 	object_class->finalize = replit_client_finalize;
 }
 
-static void replit_client_init(ReplitClient* self __attribute__((unused))) {}
+static void replit_client_init(ReplitClient *self __attribute__((unused))) {}
 
-static void replit_client_dispose(GObject* gobject) {
-	ReplitClient* self = REPLIT_CLIENT (gobject);
+static void replit_client_dispose(GObject *gobject) {
+	ReplitClient *self = REPLIT_CLIENT (gobject);
 
 	g_clear_object(&self->session);
 	g_clear_object(&self->jar);
@@ -68,18 +68,18 @@ static void replit_client_dispose(GObject* gobject) {
 	G_OBJECT_CLASS (replit_client_parent_class)->dispose(gobject);
 }
 
-static void replit_client_finalize(GObject* gobject) {
+static void replit_client_finalize(GObject *gobject) {
 	// free other stuff?
 
 	G_OBJECT_CLASS (replit_client_parent_class)->finalize(gobject);
 }
 
-ReplitClient* replit_client_new(const gchar* token) {
-	SoupSession* session = soup_session_new();
+ReplitClient *replit_client_new(const gchar *token) {
+	SoupSession *session = soup_session_new();
 
-	SoupCookie* cookie = soup_cookie_new(TOKEN_COOKIE, token, REPLIT_DOMAIN, "/", -1);
+	SoupCookie *cookie = soup_cookie_new(TOKEN_COOKIE, token, REPLIT_DOMAIN, "/", -1);
 
-	SoupCookieJar* jar = soup_cookie_jar_new();
+	SoupCookieJar *jar = soup_cookie_jar_new();
 	soup_cookie_jar_add_cookie(jar, cookie);
 
 	soup_session_add_feature(session, SOUP_SESSION_FEATURE (jar));
@@ -93,15 +93,15 @@ ReplitClient* replit_client_new(const gchar* token) {
 	);
 }
 
-JsonNode* replit_client_query(
-	ReplitClient* self,
-	const gchar* query,
-	JsonNode* variables,
-	GError** error
+JsonNode *replit_client_query(
+	ReplitClient *self,
+	const gchar *query,
+	JsonNode *variables,
+	GError **error
 ) {
 	if (variables == NULL) variables = json_node_new(JSON_NODE_OBJECT);
 
-	JsonBuilder* builder = json_builder_new();
+	JsonBuilder *builder = json_builder_new();
 	json_builder_begin_object(builder);
 	json_builder_set_member_name(builder, "operationName");
 	json_builder_add_null_value(builder);
@@ -111,31 +111,31 @@ JsonNode* replit_client_query(
 	json_builder_add_value(builder, variables);
 	json_builder_end_object(builder);
 
-	JsonGenerator* generator = json_generator_new();
-	JsonNode* builder_root = json_builder_get_root(builder);
+	JsonGenerator *generator = json_generator_new();
+	JsonNode *builder_root = json_builder_get_root(builder);
 	json_generator_set_root(generator, builder_root);
 
 	gsize req_length;
-	gchar* req_body = json_generator_to_data(generator, &req_length);
+	gchar *req_body = json_generator_to_data(generator, &req_length);
 
 	g_object_unref(builder);
 	g_object_unref(generator);
 	g_object_unref(builder_root);
 
-	GBytes* req_bytes = g_bytes_new(req_body, req_length);
+	GBytes *req_bytes = g_bytes_new(req_body, req_length);
 
 	g_free(req_body);
 
-	GUri* uri = g_uri_build(0, "https", NULL, REPLIT_DOMAIN, -1, "/graphql", NULL, NULL);
-	SoupMessage* msg = soup_message_new_from_uri(SOUP_METHOD_POST, uri);
+	GUri *uri = g_uri_build(0, "https", NULL, REPLIT_DOMAIN, -1, "/graphql", NULL, NULL);
+	SoupMessage *msg = soup_message_new_from_uri(SOUP_METHOD_POST, uri);
 	soup_message_set_request_body_from_bytes(msg, "application/json", req_bytes);
 
-	SoupMessageHeaders* headers = soup_message_get_request_headers(msg);
+	SoupMessageHeaders *headers = soup_message_get_request_headers(msg);
 	soup_message_headers_append(headers, "Referrer", "https://replit.com/");
 	soup_message_headers_append(headers, "X-Requested-With", "XMLHttpRequest");
 	soup_message_headers_append(headers, "X-Libreplit-Version", REPLIT_VERSION_S);
 
-	GInputStream* stream = soup_session_send(self->session, msg, NULL, error);
+	GInputStream *stream = soup_session_send(self->session, msg, NULL, error);
 
 	SoupStatus status = soup_message_get_status(msg);
 
@@ -156,7 +156,7 @@ JsonNode* replit_client_query(
 		return NULL;
 	}
 
-	JsonParser* parser = json_parser_new_immutable();
+	JsonParser *parser = json_parser_new_immutable();
 	gboolean ok = json_parser_load_from_stream(parser, stream, NULL, error);
 
 	g_object_unref(stream);
@@ -167,30 +167,30 @@ JsonNode* replit_client_query(
 		return NULL;
 	}
 
-	JsonNode* root = json_parser_steal_root(parser);
-	JsonObject* root_object = json_node_get_object(root);
+	JsonNode *root = json_parser_steal_root(parser);
+	JsonObject *root_object = json_node_get_object(root);
 	
 	g_object_unref(parser);
 
-	JsonNode* error_node = json_object_get_member(root_object, "error");
+	JsonNode *error_node = json_object_get_member(root_object, "error");
 
 	if (error_node != NULL) {
 		switch (json_node_get_node_type(error_node)) {
 			case JSON_NODE_OBJECT:
-				JsonObject* error_object = json_node_get_object(error_node);
+				JsonObject *error_object = json_node_get_object(error_node);
 
 				if (json_object_has_member(error_object, "errors")) {
-					JsonArray* errors = json_object_get_array_member(error_object, "errors");
+					JsonArray *errors = json_object_get_array_member(error_object, "errors");
 					guint errors_length = json_array_get_length(errors);
 
 					if (errors_length > 0) {
-						GString* error_object_buffer = g_string_new("");
+						GString *error_object_buffer = g_string_new("");
 
 						for (guint i = 0; i < errors_length; i++) {
 							g_string_append(error_object_buffer, ", ");
 
-							JsonObject* errors_element = json_array_get_object_element(errors, i);
-							const gchar* errors_element_message =
+							JsonObject *errors_element = json_array_get_object_element(errors, i);
+							const gchar *errors_element_message =
 								json_object_get_string_member(errors_element, "message");
 
 							g_string_append(error_object_buffer, errors_element_message);
@@ -212,7 +212,7 @@ JsonNode* replit_client_query(
 				__attribute__ ((fallthrough));
 
 			case JSON_NODE_VALUE:
-				const gchar* error_string = json_node_get_string(error_node);
+				const gchar *error_string = json_node_get_string(error_node);
 
 				if (error_string != NULL) {
 					g_set_error_literal(
@@ -243,7 +243,7 @@ JsonNode* replit_client_query(
 		return NULL;
 	}
 
-	JsonNode* data_node = json_object_get_member(root_object, "data");
+	JsonNode *data_node = json_object_get_member(root_object, "data");
 
 	if (data_node == NULL) {
 		g_set_error_literal(
@@ -265,28 +265,28 @@ JsonNode* replit_client_query(
 	return data_node;
 }
 
-GObject* replit_client_query_to_object(
-	ReplitClient* self,
-	const gchar* query,
-	JsonNode* variables,
+GObject *replit_client_query_to_object(
+	ReplitClient *self,
+	const gchar *query,
+	JsonNode *variables,
 	GType gtype,
-	GError** error
+	GError **error
 ) {
-	JsonNode* data = replit_client_query(self, query, variables, error);
-	GObject* object = json_gobject_deserialize(gtype, data);
+	JsonNode *data = replit_client_query(self, query, variables, error);
+	GObject *object = json_gobject_deserialize(gtype, data);
 
 	g_object_unref(data);
 
 	return object;
 }
 
-gchar* replit_client_login(
-	const gchar* username,
-	const gchar* password,
-	const gchar* captcha,
-	GError** error
+gchar *replit_client_login(
+	const gchar *username,
+	const gchar *password,
+	const gchar *captcha,
+	GError **error
 ) {
-	JsonBuilder* builder = json_builder_new();
+	JsonBuilder *builder = json_builder_new();
 	json_builder_begin_object(builder);
 	json_builder_set_member_name(builder, "username");
 	json_builder_add_string_value(builder, username);
@@ -300,34 +300,34 @@ gchar* replit_client_login(
 	json_builder_add_string_value(builder, REPLIT_HC_KEY);
 	json_builder_end_object(builder);
 
-	JsonGenerator* generator = json_generator_new();
-	JsonNode* builder_root = json_builder_get_root(builder);
+	JsonGenerator *generator = json_generator_new();
+	JsonNode *builder_root = json_builder_get_root(builder);
 	json_generator_set_root(generator, builder_root);
 
 	gsize req_length;
-	gchar* req_body = json_generator_to_data(generator, &req_length);
+	gchar *req_body = json_generator_to_data(generator, &req_length);
 
 	g_object_unref(builder);
 	g_object_unref(generator);
 	g_object_unref(builder_root);
 
-	GBytes* req_bytes = g_bytes_new(req_body, req_length);
+	GBytes *req_bytes = g_bytes_new(req_body, req_length);
 
 	g_free(req_body);
 
-	GUri* uri = g_uri_build(0, "https", NULL, REPLIT_DOMAIN, -1, "/login", NULL, NULL);
-	SoupMessage* msg = soup_message_new_from_uri(SOUP_METHOD_POST, uri);
+	GUri *uri = g_uri_build(0, "https", NULL, REPLIT_DOMAIN, -1, "/login", NULL, NULL);
+	SoupMessage *msg = soup_message_new_from_uri(SOUP_METHOD_POST, uri);
 	soup_message_set_request_body_from_bytes(msg, "application/json", req_bytes);
 	
-	SoupMessageHeaders* headers = soup_message_get_request_headers(msg);
+	SoupMessageHeaders *headers = soup_message_get_request_headers(msg);
 	soup_message_headers_append(headers, "Referrer", "https://replit.com/");
 	soup_message_headers_append(headers, "User-Agent", "Mozilla/5.0");
 	soup_message_headers_append(headers, "X-Requested-With", "XMLHttpRequest");
 	soup_message_headers_append(headers, "X-Libreplit-Version", REPLIT_VERSION_S);
 
-	SoupSession* session = soup_session_new();
+	SoupSession *session = soup_session_new();
 
-	GInputStream* stream = soup_session_send(session, msg, NULL, error);
+	GInputStream *stream = soup_session_send(session, msg, NULL, error);
 
 	SoupStatus status = soup_message_get_status(msg);
 
@@ -356,16 +356,16 @@ gchar* replit_client_login(
 		return NULL;
 	}
 
-	GSList* cookies = soup_cookies_from_response(msg);
-	gchar* token = NULL;
+	GSList *cookies = soup_cookies_from_response(msg);
+	gchar *token = NULL;
 
-	for (GSList* this = cookies; this; this = this->next) {
-		SoupCookie* cookie = this->data;
-		const char* cookie_name = soup_cookie_get_name(cookie);
+	for (GSList *this = cookies; this; this = this->next) {
+		SoupCookie *cookie = this->data;
+		const char *cookie_name = soup_cookie_get_name(cookie);
 
 		if (!g_str_equal(cookie_name, TOKEN_COOKIE)) continue;
 
-		const char* cookie_value = soup_cookie_get_value(cookie);
+		const char *cookie_value = soup_cookie_get_value(cookie);
 		token = g_strdup(cookie_value);
 		
 		break;
