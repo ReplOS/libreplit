@@ -54,7 +54,7 @@ G_DEFINE_QUARK (REPLIT_CLIENT_ERROR, replit_client_error)
 struct _ReplitClient {
 	GObject parent_instance;
 
-	const gchar *token;
+	gchar *token;
 	SoupSession *session;
 	SoupCookieJar *jar;
 };
@@ -83,7 +83,9 @@ static void replit_client_dispose(GObject *gobject) {
 }
 
 static void replit_client_finalize(GObject *gobject) {
-	// free other stuff?
+	ReplitClient *self = REPLIT_CLIENT (gobject);
+
+	g_free(self->token);
 
 	G_OBJECT_CLASS (replit_client_parent_class)->finalize(gobject);
 }
@@ -108,7 +110,7 @@ ReplitClient *replit_client_new(const gchar *token) {
 
 	return g_object_new(
 		REPLIT_TYPE_CLIENT,
-		"token", token,
+		"token", g_strdup(token),
 		"session", session,
 		"jar", jar,
 		NULL
