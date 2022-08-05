@@ -310,7 +310,7 @@ JsonNode *replit_client_query(
  * @gtype: The object type to convert the response data to.
  * 
  * Sends a GraphQL query or mutation to Replit to perform as the current user,
- * and convert the response data to a GObject of the given type.
+ * and converts the response data to a GObject of the given type.
  * 
  * Internally, this method calls [method@Client.query] with its arguments, and
  * then uses GObject to turn the #JsonNode into the object.
