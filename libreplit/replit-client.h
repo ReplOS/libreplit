@@ -107,28 +107,28 @@ typedef enum {
 #define REPLIT_TYPE_CLIENT replit_client_get_type()
 G_DECLARE_FINAL_TYPE (ReplitClient, replit_client, REPLIT, CLIENT, GObject)
 
-ReplitClient *replit_client_new(const gchar *token);
+ReplitClient* replit_client_new(const gchar* token);
 
-JsonNode *replit_client_query(
-	ReplitClient *client,
-	const gchar *query,
-	JsonNode *variables,
-	GError **error
+JsonNode* replit_client_query(
+	ReplitClient* client,
+	const gchar* query,
+	JsonNode* variables,
+	GError** error
 );
 
-GObject *replit_client_query_to_object(
-	ReplitClient *client,
-	const gchar *query,
-	JsonNode *variables,
+GObject* replit_client_query_to_object(
+	ReplitClient* client,
+	const gchar* query,
+	JsonNode* variables,
 	GType gtype,
-	GError **error
+	GError** error
 );
 
-gchar *replit_client_login(
-	const gchar *username,
-	const gchar *password,
-	const gchar *captcha,
-	GError **error
+gchar* replit_client_login(
+	const gchar* username,
+	const gchar* password,
+	const gchar* captcha,
+	GError** error
 );
 
 G_END_DECLS
