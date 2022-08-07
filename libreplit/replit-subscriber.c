@@ -36,6 +36,24 @@
 #define MESSAGE_SUB   "{\"type\":\"start\",\"id\":%d,\"payload\":%s}"
 #define MESSAGE_UNSUB "{\"type\":\"stop\",\"id\":%d}"
 
+/**
+ * ReplitSubscriber:
+ * 
+ * Represents a client for continuously connecting to Replit.
+ * 
+ * It is recommended to obtain a #ReplitSubscriber through the corresponding
+ * method on #ReplitClient if you are also making regular API requests.
+ * 
+ * The #ReplitSubscriber tries to continually maintain a WebSocket connection to
+ * Replit, reconnecting whenever the existing WebSocket connection closes or
+ * fails. Subscribing provides no guarantee that a subscription request has been
+ * sent to Replit; instead, the method will add it to a queue that is processed
+ * immediately if a WebSocket connection is active, and whenever a new
+ * connection is established.
+ * 
+ * There are probably a lot of memory leaks here.
+ */
+
 struct _ReplitSubscriber {
 	GObject parent_instance;
 
@@ -212,6 +230,18 @@ static void replit_subscriber_on_close(
 	replit_subscriber_connect(self);
 }
 
+/**
+ * replit_subscriber_new:
+ * @token: (transfer none): The token to use as the `connect.sid` cookie.
+ * 
+ * Creates a new #ReplitSubscriber with the given login token.
+ * 
+ * If you are making regular API requests with a #ReplitClient, it's recommended
+ * to use the corresponding method on that instance to get a #ReplitSubscriber
+ * associated with it.
+ * 
+ * Returns: (transfer full): The new #ReplitSubscriber.
+ */
 ReplitSubscriber* replit_subscriber_new(const gchar* token) {
 	SoupSession* session = soup_session_new();
 
@@ -231,6 +261,18 @@ ReplitSubscriber* replit_subscriber_new(const gchar* token) {
 	);
 }
 
+/**
+ * replit_subscriber_new_with_session:
+ * @session: (transfer full): The session to initialise the instance with.
+ * 
+ * Creates a new #ReplitSubscriber with the provided #SoupSession.
+ * 
+ * If you posess a #SoupSession that contains a `token.sid` cookie already, you
+ * can create a #ReplitSubscriber from that session. This is largely intended as
+ * an internal method.
+ * 
+ * Returns: (transfer full): The new #ReplitSubscriber.
+ */
 ReplitSubscriber* replit_subscriber_new_with_session(SoupSession* session) {
 	return g_object_new(
 		REPLIT_TYPE_SUBSCRIBER,
@@ -239,6 +281,18 @@ ReplitSubscriber* replit_subscriber_new_with_session(SoupSession* session) {
 	);
 }
 
+/**
+ * replit_subscriber_subscribe:
+ * @subscriber: The subscriber.
+ * @query: (transfer none): The GraphQL subscription query to send.
+ * @variables: (transfer full) (nullable): Any variables to pass with the query.
+ * @callback: (transfer none) (scope forever): The callback to run for data.
+ * @user_data: (transfer full) (nullable): Will be passed to the callback.
+ * 
+ * Adds a subscription to the #ReplitSubscriber.
+ * 
+ * Returns: The subscription ID of the new subscription.
+ */
 guint replit_subscriber_subscribe(
 	ReplitSubscriber* self,
 	const gchar* query,
@@ -309,6 +363,22 @@ static void replit_subscriber_object_callback(
 	user_data2->callback(subscriber, id, object, user_data2->user_data);
 }
 
+/**
+ * replit_subscriber_subscribe_to_object:
+ * @subscriber: The subscriber.
+ * @query: (transfer none): The GraphQL subscription query to send.
+ * @variables: (transfer full) (nullable): Any variables to pass with the query.
+ * @gtype: The object type to convert the response data to.
+ * @callback: (transfer none) (scope forever): The callback to run for data.
+ * @user_data: (transfer full) (nullable): Will be passed to the callback.
+ * 
+ * Adds a subscription to the #ReplitSubscriber, and converts any response data.
+ * 
+ * Internally, this method calls [method@Subscriber.subscribe] with its
+ * arguments, and then uses GObject to turn the #JsonNode into the object.
+ * 
+ * Returns: The subscription ID of the new subscription.
+ */
 guint replit_subscriber_subscribe_to_object(
 	ReplitSubscriber* self,
 	const gchar* query,
@@ -330,6 +400,19 @@ guint replit_subscriber_subscribe_to_object(
 	return replit_subscriber_subscribe(self, query, variables, callback2, user_data2);
 }
 
+/**
+ * replit_subscriber_unsubscribe:
+ * @subscriber: The subsciber.
+ * @id: The subscription ID of the subscription to remove.
+ * 
+ * Cancels and removes a created subscription.
+ * 
+ * Once this method is called with a given ID, the callback registered for the
+ * subscription with that ID will no longer be called.
+ * 
+ * The ID passed must be an ID returned by either [method@Subscriber.subscribe]
+ * or [method@Subscriber.subscribe_to_object].
+ */
 void replit_subscriber_unsubscribe(ReplitSubscriber* self, guint id) {
 	if (id >= self->id_counter) return;
 

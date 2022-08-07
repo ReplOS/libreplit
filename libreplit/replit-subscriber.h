@@ -42,6 +42,15 @@ G_BEGIN_DECLS
 #define REPLIT_TYPE_SUBSCRIBER replit_subscriber_get_type()
 G_DECLARE_FINAL_TYPE (ReplitSubscriber, replit_subscriber, REPLIT, SUBSCRIBER, GObject)
 
+/**
+ * ReplitSubscriptionCallback:
+ * @subscriber: The subscriber.
+ * @id: The ID of the subscription.
+ * @data: (transfer full): The data received from Replit.
+ * @user_data: (transfer none) (nullable): Any user data given when subscribing.
+ * 
+ * A callback for when new data is received as part of a subscription.
+ */
 typedef void (* ReplitSubscriptionCallback)(
 	ReplitSubscriber* subscriber,
 	guint id,
@@ -49,6 +58,18 @@ typedef void (* ReplitSubscriptionCallback)(
 	gpointer user_data
 );
 
+/**
+ * ReplitSubscriptionCallbackObject:
+ * @subscriber: The subscriber.
+ * @id: The ID of the subscription.
+ * @object: (transfer full): The data received, converted to a #GObject.
+ * @user_data: (transfer none) (nullable): Any user data given when subscribing.
+ * 
+ * A callback for when new data is received as part of a subscription.
+ * 
+ * This callback form is used for when the response data is given as part of a
+ * subscription where a #GType to convert to has been passed.
+ */
 typedef void (* ReplitSubscriptionCallbackObject)(
 	ReplitSubscriber* subscriber,
 	guint id,
