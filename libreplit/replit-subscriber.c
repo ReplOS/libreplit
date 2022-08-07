@@ -186,19 +186,19 @@ static void replit_subscriber_on_message(
 
 	if (payload == NULL || id >= self->callbacks->len) return;
 
-	JsonNode* data = json_node_copy(json_object_get_member(payload, "data"));
+	JsonNode* node = json_node_copy(json_object_get_member(payload, "data"));
 	gpointer callback_ptr = g_ptr_array_index(self->callbacks, id);
 	
 	g_object_unref(parser);
 
 	if (callback_ptr == NULL) {
-		g_object_unref(data);
+		g_object_unref(node);
 
 		return;
 	}
 
 	ReplitSubscriptionCallback callback = (ReplitSubscriptionCallback) callback_ptr;
-	callback(self, id, data, g_ptr_array_index(self->user_data, id));
+	callback(self, id, node, g_ptr_array_index(self->user_data, id));
 }
 
 static void replit_subscriber_on_close(
