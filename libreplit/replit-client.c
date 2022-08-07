@@ -27,7 +27,6 @@
  * authorization.
  */
 
-#include <glib.h>
 #include <libsoup/soup.h>
 
 #include "replit-client.h"
