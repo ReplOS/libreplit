@@ -461,6 +461,7 @@ gchar* replit_client_login(
 
 /**
  * replit_client_get_subscriber:
+ * @client: The client.
  * 
  * Returns an authenticated #ReplitSubscriber associated with the #ReplitClient.
  * 
