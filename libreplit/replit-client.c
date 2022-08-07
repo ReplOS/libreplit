@@ -473,6 +473,7 @@ gchar* replit_client_login(
  */
 ReplitSubscriber* replit_client_get_subscriber(ReplitClient* self) {
 	if (self->subscriber == NULL) {
+		g_object_ref(self->session);
 		self->subscriber = replit_subscriber_new_with_session(self->session);
 	}
 
