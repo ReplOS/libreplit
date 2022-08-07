@@ -235,3 +235,51 @@ ReplitSubscriber* replit_subscriber_new_with_session(SoupSession* session) {
 		NULL
 	);
 }
+
+guint replit_subscriber_subscribe(
+	ReplitSubscriber* self,
+	const gchar* query,
+	JsonNode* variables,
+	ReplitSubscriptionCallback callback
+) {
+	guint id = self->id_counter++;
+
+	if (variables == NULL) variables = json_node_new(JSON_NODE_OBJECT);
+
+	JsonNode* extensions = json_node_new(JSON_NODE_OBJECT);
+
+	JsonBuilder* builder = json_builder_new();
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "operationName");
+	json_builder_add_null_value(builder);
+	json_builder_set_member_name(builder, "query");
+	json_builder_add_string_value(builder, query);
+	json_builder_set_member_name(builder, "variables");
+	json_builder_add_value(builder, variables);
+	json_builder_set_member_name(builder, "extensions");
+	json_builder_add_value(builder, extensions);
+	json_builder_end_object(builder);
+
+	JsonGenerator* generator = json_generator_new();
+	JsonNode* builder_root = json_builder_get_root(builder);
+	json_generator_set_root(generator, builder_root);
+
+	gsize payload_length;
+	gchar* payload = json_generator_to_data(generator, &payload_length);
+
+	g_object_unref(extensions);
+	g_object_urnef(builder);
+	g_object_unref(generator);
+	g_object_unref(builder_root);
+
+	gchar* message = g_strdup_printf(MESSAGE_SUB, id, payload);
+
+	g_free(payload);
+
+	if (self->ws != NULL) soup_websocket_connection_send_text(self->ws, message);
+
+	g_ptr_array_add(self->callbacks, callback);
+	g_ptr_array_add(self->subscriptions, message);
+
+	return id;
+}
