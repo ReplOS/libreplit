@@ -272,7 +272,7 @@ guint replit_subscriber_subscribe(
 	gchar* payload = json_generator_to_data(generator, &payload_length);
 
 	g_object_unref(extensions);
-	g_object_urnef(builder);
+	g_object_unref(builder);
 	g_object_unref(generator);
 	g_object_unref(builder_root);
 
