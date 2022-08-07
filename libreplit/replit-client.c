@@ -57,6 +57,7 @@ struct _ReplitClient {
 	gchar* token;
 	SoupSession* session;
 	SoupCookieJar* jar;
+	ReplitSubscriber* subscriber;
 };
 
 G_DEFINE_TYPE (ReplitClient, replit_client, G_TYPE_OBJECT)
@@ -78,6 +79,7 @@ static void replit_client_dispose(GObject* gobject) {
 
 	g_clear_object(&self->session);
 	g_clear_object(&self->jar);
+	g_clear_object(&self->subscriber);
 
 	G_OBJECT_CLASS (replit_client_parent_class)->dispose(gobject);
 }
@@ -456,4 +458,24 @@ gchar* replit_client_login(
 	}
 
 	return token;
+}
+
+/**
+ * replit_client_get_subscriber:
+ * 
+ * Returns an authenticated #ReplitSubscriber associated with the #ReplitClient.
+ * 
+ * The #ReplitClient holds the subscriber, and the #ReplitSubscriber is created
+ * if it has not been already when this method is called. The #SoupSession
+ * associated with the #ReplitClient is passed to the #ReplitSubscriber for
+ * authentication purposes.
+ * 
+ * Returns: (transfer none): The subscriber instance.
+ */
+ReplitSubscriber* replit_client_get_subscriber(ReplitClient* self) {
+	if (self->subscriber == NULL) {
+		self->subscriber = replit_subscriber_new_with_session(self->session);
+	}
+
+	return self->subscriber;
 }

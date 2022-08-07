@@ -36,6 +36,8 @@
 #include <glib.h>
 #include <json-glib/json-glib.h>
 
+#include "replit-subscriber.h"
+
 G_BEGIN_DECLS
 
 /**
@@ -130,5 +132,7 @@ gchar* replit_client_login(
 	const gchar* captcha,
 	GError** error
 );
+
+ReplitSubscriber* replit_client_get_subscriber(ReplitClient* client);
 
 G_END_DECLS
