@@ -146,8 +146,8 @@ static void replit_subscriber_connect_finish(
 		return;
 	}
 
-	g_signal_connect(self->ws, "message", replit_subscriber_on_message, self);
-	g_signal_connect(self->ws, "closed", replit_subscriber_on_close, self);
+	g_signal_connect(self->ws, "message", (GCallback) replit_subscriber_on_message, self);
+	g_signal_connect(self->ws, "closed", (GCallback) replit_subscriber_on_close, self);
 
 	soup_websocket_connection_send_text(self->ws, MESSAGE_INIT);
 
