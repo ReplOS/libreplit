@@ -28,3 +28,49 @@
  */
 
 #include "replit-subscriber.h"
+
+#define TOKEN_COOKIE "connect.sid"
+
+struct _ReplitSubscriber {
+	GObject parent_instance;
+
+	gchar* token;
+	SoupSession* session;
+	SoupCookieJar* jar;
+	guint id_counter;
+	GPtrArray* callbacks;
+	GPtrArray* subscriptions;
+};
+
+G_DEFINE_TYPE (ReplitSubscriber, replit_subscriber, G_TYPE_OBJECT)
+
+static void replit_subscriber_dispose(GObject* gobject);
+static void replit_subscriber_finalize(GObject* gobject);
+
+static void replit_subscriber_class_init(ReplitSubscriberClass* klass) {
+	GObjectClass* object_class = G_OBJECT_CLASS (klass);
+
+	object_class->dispose = replit_subscriber_dispose;
+	object_class->finalize = replit_subscriber_finalize;
+}
+
+static void replit_subscriber_init(ReplitSubscriber* self __attribute__((unused))) {}
+
+static void replit_subscriber_dispose(GObject* gobject) {
+	ReplitSubscriber* self = REPLIT_SUBSCRIBER (gobject);
+
+	g_clear_object(&self->session);
+	g_clear_object(&self->jar);
+
+	G_OBJECT_CLASS (replit_subscriber_parent_class)->dispose(gobject);
+}
+
+static void replit_subscriber_finalize(GObject* gobject) {
+	ReplitSubscriber* self = REPLIT_SUBSCRIBER (gobject);
+
+	g_free(self->token);
+	g_free(self->callbacks);
+	g_free(self->subscriptions);
+
+	G_OBJECT_CLASS (replit_subscriber_parent_class)->finalize(gobject);
+}
