@@ -133,7 +133,7 @@ static void replit_subscriber_connect(ReplitSubscriber* self) {
 }
 
 static void replit_subscriber_connect_finish(
-	GObject* source_object,
+	GObject* source_object __attribute__((unused)),
 	GAsyncResult* res,
 	gpointer user_data
 ) {
@@ -160,7 +160,7 @@ static void replit_subscriber_connect_finish(
 }
 
 static void replit_subscriber_on_message(
-  SoupWebsocketConnection* ws,
+  SoupWebsocketConnection* ws __attribute__((unused)),
   gint type,
   GBytes* message,
   gpointer user_data
@@ -202,7 +202,7 @@ static void replit_subscriber_on_message(
 }
 
 static void replit_subscriber_on_close(
-	SoupWebsocketConnection* ws,
+	SoupWebsocketConnection* ws __attribute__((unused)),
 	gpointer user_data
 ) {
 	ReplitSubscriber* self = REPLIT_SUBSCRIBER (user_data);
