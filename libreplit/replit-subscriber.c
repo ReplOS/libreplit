@@ -27,9 +27,14 @@
  * authorization.
  */
 
+#include "replit-client.h"
 #include "replit-subscriber.h"
 
 #define TOKEN_COOKIE "connect.sid"
+
+#define MESSAGE_INIT  "{\"type\":\"connection_init\",\"payload\":{}}"
+#define MESSAGE_SUB   "{\"type\":\"start\",\"id\":%d,\"payload\":%s}"
+#define MESSAGE_UNSUB "{\"type\":\"stop\",\"id\":%d}"
 
 struct _ReplitSubscriber {
 	GObject parent_instance;
@@ -40,12 +45,29 @@ struct _ReplitSubscriber {
 	guint id_counter;
 	GPtrArray* callbacks;
 	GPtrArray* subscriptions;
+	SoupWebsocketConnection* ws;
 };
 
 G_DEFINE_TYPE (ReplitSubscriber, replit_subscriber, G_TYPE_OBJECT)
 
 static void replit_subscriber_dispose(GObject* gobject);
 static void replit_subscriber_finalize(GObject* gobject);
+static void replit_subscriber_connect(ReplitSubscriber* subscriber);
+static void replit_subscriber_connect_finish(
+	GObject* source_object,
+	GAsyncResult* res,
+	gpointer user_data
+);
+static void replit_subscriber_on_message(
+  SoupWebsocketConnection* ws,
+  gint type,
+  GBytes* message,
+  gpointer user_data
+);
+static void replit_subscriber_on_close(
+	SoupWebsocketConnection* ws,
+	gpointer user_data
+);
 
 static void replit_subscriber_class_init(ReplitSubscriberClass* klass) {
 	GObjectClass* object_class = G_OBJECT_CLASS (klass);
@@ -54,7 +76,12 @@ static void replit_subscriber_class_init(ReplitSubscriberClass* klass) {
 	object_class->finalize = replit_subscriber_finalize;
 }
 
-static void replit_subscriber_init(ReplitSubscriber* self __attribute__((unused))) {}
+static void replit_subscriber_init(ReplitSubscriber* self) {
+	self->callbacks = g_ptr_array_new();
+	self->subscriptions = g_ptr_array_new_with_free_func(g_free);
+
+	replit_subscriber_connect(self);
+}
 
 static void replit_subscriber_dispose(GObject* gobject) {
 	ReplitSubscriber* self = REPLIT_SUBSCRIBER (gobject);
@@ -68,9 +95,143 @@ static void replit_subscriber_dispose(GObject* gobject) {
 static void replit_subscriber_finalize(GObject* gobject) {
 	ReplitSubscriber* self = REPLIT_SUBSCRIBER (gobject);
 
+	g_ptr_array_remove_range(self->subscriptions, 0, self->subscriptions->len);
+
 	g_free(self->token);
-	g_free(self->callbacks);
-	g_free(self->subscriptions);
+	g_ptr_array_free(self->callbacks, TRUE);
+	g_ptr_array_free(self->subscriptions, TRUE);
 
 	G_OBJECT_CLASS (replit_subscriber_parent_class)->finalize(gobject);
+}
+
+static void replit_subscriber_connect(ReplitSubscriber* self) {
+	GUri* uri = g_uri_build(
+		0,
+		"https",
+		NULL,
+		REPLIT_DOMAIN,
+		-1,
+		"/graphql_subscriptions",
+		NULL,
+		NULL
+	);
+	SoupMessage* msg = soup_message_new_from_uri(SOUP_METHOD_GET, uri);
+
+	soup_session_websocket_connect_async(
+		self->session,
+		msg,
+		NULL,
+		NULL,
+		G_PRIORITY_DEFAULT,
+		NULL,
+		replit_subscriber_connect_finish,
+		self
+	);
+}
+
+static void replit_subscriber_connect_finish(
+	GObject* source_object,
+	GAsyncResult* res,
+	gpointer user_data
+) {
+	ReplitSubscriber* self = REPLIT_SUBSCRIBER (user_data);
+
+	self->ws = soup_session_websocket_connect_finish(self->session, res, NULL);
+
+	if (self->ws == NULL) {
+		replit_subscriber_connect(self);
+		return;
+	}
+
+	g_signal_connect(self->ws, "message", replit_subscriber_on_message, self);
+	g_signal_connect(self->ws, "closed", replit_subscriber_on_close, self);
+
+	soup_websocket_connection_send_text(self->ws, MESSAGE_INIT);
+
+	for (guint i = 0; i < self->subscriptions->len; i++) {
+		if (g_ptr_array_index(self->subscriptions, i) == NULL) continue;
+
+		gchar* message = g_ptr_array_index(self->subscriptions, i);
+		soup_websocket_connection_send_text(self->ws, message);
+	}
+}
+
+static void replit_subscriber_on_message(
+  SoupWebsocketConnection* ws,
+  gint type,
+  GBytes* message,
+  gpointer user_data
+) {
+	ReplitSubscriber* self = REPLIT_SUBSCRIBER (user_data);
+
+	if (type != SOUP_WEBSOCKET_DATA_TEXT) return;
+
+	const gchar* data = g_bytes_get_data(message, NULL);
+	JsonParser* parser = json_parser_new();
+	
+	if (!json_parser_load_from_data(parser, data, -1, NULL)) return;
+
+	JsonNode* root = json_parser_get_root(parser);
+	JsonObject* root_object = json_node_get_object(root);
+
+	const gchar* msg_type = json_object_get_string_member(root_object, "type");
+
+	if (!g_str_equal(msg_type, "data")) return;
+
+	guint id = (guint) json_object_get_int_member(root_object, "id");
+	JsonObject* payload = json_object_get_object_member(root_object, "payload");
+
+	if (payload == NULL || id >= self->callbacks->len) return;
+
+	JsonNode* data = json_node_copy(json_object_get_member(payload, "data"));
+	gpointer callback_ptr = g_ptr_array_index(self->callbacks, id);
+	
+	g_object_unref(parser);
+
+	if (callback_ptr == NULL) {
+		g_object_unref(data);
+
+		return;
+	}
+
+	ReplitSubscriptionCallback callback = (ReplitSubscriptionCallback) callback_ptr;
+	callback(self, id, data);
+}
+
+static void replit_subscriber_on_close(
+	SoupWebsocketConnection* ws,
+	gpointer user_data
+) {
+	ReplitSubscriber* self = REPLIT_SUBSCRIBER (user_data);
+
+	g_clear_object(&self->ws);
+
+	replit_subscriber_connect(self);
+}
+
+ReplitSubscriber* replit_subscriber_new(const gchar* token) {
+	SoupSession* session = soup_session_new();
+
+	SoupCookie* cookie = soup_cookie_new(TOKEN_COOKIE, token, REPLIT_DOMAIN, "/", -1);
+
+	SoupCookieJar* jar = soup_cookie_jar_new();
+	soup_cookie_jar_add_cookie(jar, cookie);
+
+	soup_session_add_feature(session, SOUP_SESSION_FEATURE (jar));
+
+	return g_object_new(
+		REPLIT_TYPE_SUBSCRIBER,
+		"token", g_strdup(token),
+		"session", session,
+		"jar", jar,
+		NULL
+	);
+}
+
+ReplitSubscriber* replit_subscriber_new_with_session(SoupSession* session) {
+	return g_object_new(
+		REPLIT_TYPE_SUBSCRIBER,
+		"session", session,
+		NULL
+	);
 }
