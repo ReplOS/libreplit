@@ -54,7 +54,9 @@ typedef void (* ReplitSubscriptionCallbackObject)(
 #define REPLIT_TYPE_SUBSCRIBER replit_subscriber_get_type()
 G_DECLARE_FINAL_TYPE (ReplitSubscriber, replit_subscriber, REPLIT, SUBSCRIBER, GObject)
 
-ReplitSubscriber* replit_subscriber_new(SoupSession* session);
+ReplitSubscriber* replit_subscriber_new(const gchar* token);
+
+ReplitSubscriber* replit_subscriber_new_with_session(SoupSession* session);
 
 guint replit_subscriber_subscribe(
 	ReplitSubscriber* subscriber,
