@@ -2,11 +2,13 @@ api_version = '0.1'
 
 replit_sources = [
   'replit-client.c',
+  'replit-subscriber.c',
   'replit.c',
 ]
 
 replit_headers = [
   'replit-client.h',
+  'replit-subscriber.h',
   'replit.h',
 ]
 
