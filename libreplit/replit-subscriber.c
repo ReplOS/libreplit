@@ -288,3 +288,44 @@ guint replit_subscriber_subscribe(
 
 	return id;
 }
+
+typedef struct {
+	ReplitSubscriptionCallbackObject callback;
+	GType gtype;
+	gpointer user_data;
+} ReplitSubscriberObjectUserData;
+
+static void replit_subscriber_object_callback(
+	ReplitSubscriber* subscriber,
+	guint id,
+	JsonNode* data,
+	gpointer user_data
+) {
+	ReplitSubscriberObjectUserData* user_data2 = user_data;
+
+	GType gtype = user_data2->gtype;
+	GObject* object = json_gobject_deserialize(gtype, data);
+
+	user_data2->callback(subscriber, id, object, user_data2->user_data);
+}
+
+guint replit_subscriber_subscribe_to_object(
+	ReplitSubscriber* self,
+	const gchar* query,
+	JsonNode* variables,
+	GType gtype,
+	ReplitSubscriptionCallbackObject callback,
+	gpointer user_data
+) {
+	gsize size = sizeof(ReplitSubscriberObjectUserData);
+	ReplitSubscriberObjectUserData* user_data2 = g_malloc(size);
+	
+	*user_data2 = (ReplitSubscriberObjectUserData) {
+		.callback = callback,
+		.gtype = gtype,
+		.user_data = user_data
+	};
+
+	ReplitSubscriptionCallback callback2 = replit_subscriber_object_callback;
+	return replit_subscriber_subscribe(self, query, variables, callback2, user_data2);
+}
