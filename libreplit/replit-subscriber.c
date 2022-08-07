@@ -45,6 +45,7 @@ struct _ReplitSubscriber {
 	guint id_counter;
 	GPtrArray* callbacks;
 	GPtrArray* subscriptions;
+	GPtrArray* user_data;
 	SoupWebsocketConnection* ws;
 };
 
@@ -79,6 +80,7 @@ static void replit_subscriber_class_init(ReplitSubscriberClass* klass) {
 static void replit_subscriber_init(ReplitSubscriber* self) {
 	self->callbacks = g_ptr_array_new();
 	self->subscriptions = g_ptr_array_new_with_free_func(g_free);
+	self->user_data = g_ptr_array_new();
 
 	replit_subscriber_connect(self);
 }
@@ -100,6 +102,7 @@ static void replit_subscriber_finalize(GObject* gobject) {
 	g_free(self->token);
 	g_ptr_array_free(self->callbacks, TRUE);
 	g_ptr_array_free(self->subscriptions, TRUE);
+	g_ptr_array_free(self->user_data, TRUE);
 
 	G_OBJECT_CLASS (replit_subscriber_parent_class)->finalize(gobject);
 }
@@ -195,7 +198,7 @@ static void replit_subscriber_on_message(
 	}
 
 	ReplitSubscriptionCallback callback = (ReplitSubscriptionCallback) callback_ptr;
-	callback(self, id, data);
+	callback(self, id, data, g_ptr_array_index(self->user_data, id));
 }
 
 static void replit_subscriber_on_close(
@@ -240,7 +243,8 @@ guint replit_subscriber_subscribe(
 	ReplitSubscriber* self,
 	const gchar* query,
 	JsonNode* variables,
-	ReplitSubscriptionCallback callback
+	ReplitSubscriptionCallback callback,
+	gpointer user_data
 ) {
 	guint id = self->id_counter++;
 
@@ -280,6 +284,7 @@ guint replit_subscriber_subscribe(
 
 	g_ptr_array_add(self->callbacks, callback);
 	g_ptr_array_add(self->subscriptions, message);
+	g_ptr_array_add(self->user_data, user_data);
 
 	return id;
 }

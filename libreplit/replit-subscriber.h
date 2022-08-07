@@ -42,13 +42,15 @@ G_BEGIN_DECLS
 typedef void (* ReplitSubscriptionCallback)(
 	ReplitSubscriber* subscriber,
 	guint id,
-	JsonNode* data
+	JsonNode* data,
+	gpointer user_data
 );
 
 typedef void (* ReplitSubscriptionCallbackObject)(
 	ReplitSubscriber* subscriber,
 	guint id,
-	GObject* object
+	GObject* object,
+	gpointer user_data
 );
 
 #define REPLIT_TYPE_SUBSCRIBER replit_subscriber_get_type()
@@ -62,7 +64,8 @@ guint replit_subscriber_subscribe(
 	ReplitSubscriber* subscriber,
 	const gchar* query,
 	JsonNode* variables,
-	ReplitSubscriptionCallback callback
+	ReplitSubscriptionCallback callback,
+	gpointer user_data
 );
 
 guint replit_subscriber_subscribe_to_object(
@@ -70,7 +73,8 @@ guint replit_subscriber_subscribe_to_object(
 	const gchar* query,
 	JsonNode* variables,
 	GType gtype,
-	ReplitSubscriptionCallbackObject callback
+	ReplitSubscriptionCallbackObject callback,
+	gpointer user_data
 );
 
 void replit_subscriber_unsubscribe(
