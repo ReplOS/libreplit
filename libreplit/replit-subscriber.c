@@ -319,7 +319,7 @@ guint replit_subscriber_subscribe_to_object(
 ) {
 	gsize size = sizeof(ReplitSubscriberObjectUserData);
 	ReplitSubscriberObjectUserData* user_data2 = g_malloc(size);
-	
+
 	*user_data2 = (ReplitSubscriberObjectUserData) {
 		.callback = callback,
 		.gtype = gtype,
@@ -328,4 +328,23 @@ guint replit_subscriber_subscribe_to_object(
 
 	ReplitSubscriptionCallback callback2 = replit_subscriber_object_callback;
 	return replit_subscriber_subscribe(self, query, variables, callback2, user_data2);
+}
+
+void replit_subscriber_unsubscribe(ReplitSubscriber* self, guint id) {
+	if (id >= self->id_counter) return;
+
+	if (self->subscriptions->pdata[id] != NULL) {
+		g_free(self->subscriptions->pdata[id]);
+
+		self->callbacks->pdata[id] = NULL;
+		self->subscriptions->pdata[id] = NULL;
+	}
+
+	if (self->ws != NULL) {
+		gchar* message = g_strdup_printf(MESSAGE_UNSUB, id);
+
+		soup_websocket_connection_send_text(self->ws, message);
+
+		g_free(message);
+	}
 }

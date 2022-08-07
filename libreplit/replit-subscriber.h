@@ -77,9 +77,6 @@ guint replit_subscriber_subscribe_to_object(
 	gpointer user_data
 );
 
-void replit_subscriber_unsubscribe(
-	ReplitSubscriber* subscriber,
-	guint id
-);
+void replit_subscriber_unsubscribe(ReplitSubscriber* subscriber, guint id);
 
 G_END_DECLS
