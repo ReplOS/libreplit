@@ -21,5 +21,6 @@ replit_prefix = get_option('prefix')
 replit_datadir = join_paths(replit_prefix, get_option('datadir'))
 
 subdir('libreplit')
+subdir('rquery')
 
 subdir('docs/reference')

@@ -1,4 +1,11 @@
 option(
+	'rquery',
+	type: 'boolean',
+	value: true,
+	description: 'Build rquery command-line tool',
+)
+
+option(
 	'docs',
 	type: 'boolean',
 	value: false,
