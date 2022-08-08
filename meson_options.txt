@@ -9,7 +9,7 @@ option(
 	'docs',
 	type: 'boolean',
 	value: false,
-	description : 'Build API reference and tools documentation',
+	description: 'Build API reference and tools documentation',
 )
 
 option(
@@ -17,5 +17,5 @@ option(
 	type: 'feature',
 	value: 'auto',
 	yield: true,
-	description : 'Build introspection data (requires gobject-introspection)',
+	description: 'Build introspection data (requires gobject-introspection)',
 )
