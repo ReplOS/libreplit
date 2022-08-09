@@ -11,5 +11,6 @@ if get_option('rquery')
 		c_args: ['-Wno-missing-field-initializers'],
 		dependencies: rquery_deps,
 		install: true,
+		link_with: [libreplit],
 	)
 endif
