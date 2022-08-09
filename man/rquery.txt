@@ -1,0 +1,53 @@
+// I hate AsciiDoc!
+
+RQUERY(1)
+=========
+:man manual: User Commands
+:man source: LIBREPLIT
+:doctype: manpage
+:date: August 2022
+
+NAME
+----
+rquery - Command-line interface to the libreplit API
+
+SYNOPSIS
+--------
+*rquery* ['OPTION'?] ['QUERY']
+
+DESCRIPTION
+-----------
+As a part of the libreplit project, rquery allows interacting with the libreplit
+public API in order to make requests to Replit's GraphQL-based API. rquery uses
+simple command-line flags and standard output to communicate with its user.
+
+The Replit API requires authentication, which can be provided explicitly through
+the appropriate command-line flag, or by being given in the 'REPLIT_TOKEN' or
+'CONNECT_SID' environment variables.
+
+OPTIONS
+-------
+*-v*, *--version*::
+Show program version
+
+*-s*, *--subscribe*::
+Create subscription instead of single query
+
+*-t*, *--token*='TOKEN'::
+Set 'connect.sid' cookie to 'TOKEN'
+
+*-j*, *--variables*='VARS'::
+Include 'VARS' (JSON format) as variables in query
+
+*-f*, *--query*='FILE'::
+Read query from 'FILE'
+
+*-h*, *--help*::
+Show help options
+
+BUGS
+----
+To file bug reports, visit <https://github.com/ReplOS/libreplit>.
+
+When filing a request, make sure to provide ample information and information in
+regards to the location of the issue.
