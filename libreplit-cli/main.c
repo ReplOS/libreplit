@@ -42,10 +42,10 @@ void output_response(JsonNode* res);
 gint main(gint argc, gchar* argv[]) {
 	gboolean version = FALSE;
 	gboolean subscribe = FALSE;
-	gchar* variables = NULL;
-	gchar* token = NULL;
-	gchar* query_file = NULL;
-	gchar** query_strings = NULL;
+	const gchar* variables = NULL;
+	const gchar* token = NULL;
+	const gchar* query_file = NULL;
+	const gchar** query_strings = NULL;
 
 	GOptionEntry main_entries[] = {
 		{ "version", 'v', 0, G_OPTION_ARG_NONE, &version, "Show program version" },
@@ -99,7 +99,7 @@ gint main(gint argc, gchar* argv[]) {
 			return EXIT_FAILURE;
 		}
 
-		query = query_strings[0];
+		query = g_strdup(query_strings[0]);
 	} else if (query_file != NULL) {
 		if (!g_file_get_contents(query_file, &query, NULL, &error)) {
 			g_printerr("%s\n", error->message);
@@ -115,7 +115,7 @@ gint main(gint argc, gchar* argv[]) {
 	if (variables != NULL) {
 		JsonParser* parser = json_parser_new();
 
-		if (!json_parser_load_from_data(parser, variables, -1, error)) {
+		if (!json_parser_load_from_data(parser, variables, -1, &error)) {
 			g_printerr("%s\n", error->message);
 			return EXIT_FAILURE;
 		}
@@ -128,7 +128,7 @@ gint main(gint argc, gchar* argv[]) {
 	if (subscribe) {
 		//
 	} else {
-		JsonNode* res = replit_client_query(client, query, variables_json, error);
+		JsonNode* res = replit_client_query(client, query, variables_json, &error);
 
 		if (res == NULL) {
 			g_printerr("%s\n", error->message);
