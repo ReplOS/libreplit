@@ -136,7 +136,10 @@ JsonNode* replit_client_query(
 	JsonNode* variables,
 	GError** error
 ) {
-	if (variables == NULL) variables = json_node_new(JSON_NODE_OBJECT);
+	if (variables == NULL) {
+		variables = json_node_new(JSON_NODE_OBJECT);
+		json_node_set_object(variables, json_object_new());
+	}
 
 	JsonBuilder* builder = json_builder_new();
 	json_builder_begin_object(builder);
@@ -155,9 +158,9 @@ JsonNode* replit_client_query(
 	gsize req_length;
 	gchar* req_body = json_generator_to_data(generator, &req_length);
 
+	json_node_unref(builder_root);
 	g_object_unref(builder);
 	g_object_unref(generator);
-	g_object_unref(builder_root);
 
 	GBytes* req_bytes = g_bytes_new(req_body, req_length);
 
@@ -176,7 +179,7 @@ JsonNode* replit_client_query(
 
 	SoupStatus status = soup_message_get_status(msg);
 
-	g_object_unref(uri);
+	g_uri_unref(uri);
 	g_object_unref(msg);
 
 	if (stream == NULL) return NULL;
@@ -275,7 +278,7 @@ JsonNode* replit_client_query(
 				break;
 		}
 		
-		g_object_unref(root);
+		json_node_unref(root);
 
 		return NULL;
 	}
@@ -290,14 +293,14 @@ JsonNode* replit_client_query(
 			"Server returned no data in JSON response"
 		);
 
-		g_object_unref(root);
+		json_node_unref(root);
 
 		return NULL;
 	}
 
 	data_node = json_object_dup_member(root_object, "data");
 
-	g_object_unref(root);
+	json_node_unref(root);
 
 	return data_node;
 }
@@ -328,7 +331,7 @@ GObject* replit_client_query_to_object(
 	if (data == NULL) return NULL;
 	GObject* object = json_gobject_deserialize(gtype, data);
 
-	g_object_unref(data);
+	json_node_unref(data);
 
 	return object;
 }
