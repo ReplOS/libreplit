@@ -74,11 +74,15 @@ pkg = import('pkgconfig')
 
 pkg.generate(
   description: 'A C library for interacting with Replit and its API',
-    libraries: libreplit,
-         name: 'libreplit',
-     filebase: 'libreplit-' + api_version,
-      version: meson.project_version(),
-      subdirs: 'libreplit',
-     requires: 'glib-2.0',
-  install_dir: join_paths(get_option('libdir'), 'pkgconfig')
+  libraries: libreplit,
+  name: 'libreplit',
+  filebase: 'libreplit-' + api_version,
+  version: meson.project_version(),
+  subdirs: 'libreplit',
+  requires: [
+    'glib-2.0',
+    'json-glib-1.0',
+    'libsoup-3.0',
+  ],
+  install_dir: join_paths(get_option('libdir'), 'pkgconfig'),
 )
