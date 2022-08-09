@@ -19,8 +19,10 @@ add_project_arguments([
 
 replit_prefix = get_option('prefix')
 replit_datadir = join_paths(replit_prefix, get_option('datadir'))
+replit_mandir = join_paths(replit_prefix, get_option('mandir'))
 
 subdir('libreplit')
 subdir('libreplit-cli')
 
 subdir('docs/reference')
+subdir('man')

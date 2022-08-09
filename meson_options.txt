@@ -6,6 +6,13 @@ option(
 )
 
 option(
+	'man',
+	type: 'boolean',
+	value: false,
+	description: 'Build rquery manual pages',
+)
+
+option(
 	'docs',
 	type: 'boolean',
 	value: false,
