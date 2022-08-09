@@ -8,6 +8,7 @@ rquery_deps = [
 
 if get_option('rquery')
 	executable('rquery', rquery_sources,
+		c_args: ['-Wno-missing-field-initializers'],
 		dependencies: rquery_deps,
 		install: true,
 	)
