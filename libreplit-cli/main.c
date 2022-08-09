@@ -29,7 +29,10 @@
 
 #include "replit-config.h"
 
+#include <gio/gio.h>
+#include <gio-unix-2.0/gio/gunixoutputstream.h>
 #include <glib.h>
+#include <gobject/gobject.h>
 #include <json-glib/json-glib.h>
 #include <replit.h>
 #include <stdlib.h>
@@ -142,5 +145,21 @@ gint main(gint argc, gchar* argv[]) {
 }
 
 void output_response(JsonNode* res) {
-	// TODO
+	JsonGenerator* generator = json_generator_new();
+	json_generator_set_root(generator, res);
+
+	g_autoptr(GError) error = NULL;
+
+	GOutputStream* stdout = g_unix_output_stream_new(STDOUT_FILENO, FALSE);
+	gboolean ok = json_generator_to_stream(generator, stdout, NULL, &error);
+
+	g_object_unref(stdout);
+	g_object_unref(generator);
+
+	if (!ok) {
+		g_printerr("%s\n", error->message);
+		return;
+	}
+
+	g_print("\n");
 }
