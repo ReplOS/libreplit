@@ -4,6 +4,7 @@ rquery_sources = [
 
 rquery_deps = [
 	dependency('glib-2.0'),
+	dependency('json-glib-1.0', version: '>= 1.6'),
 ]
 
 if get_option('rquery')

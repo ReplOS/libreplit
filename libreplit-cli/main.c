@@ -30,10 +30,14 @@
 #include "replit-config.h"
 
 #include <glib.h>
+#include <json-glib/json-glib.h>
+#include <replit.h>
 #include <stdlib.h>
 
 #define CLI_NAME "rquery"
 #define CLI_SUMM "A command-line tool for interacting with Replit."
+
+void output_response(JsonNode* res);
 
 gint main(gint argc, gchar* argv[]) {
 	gboolean version = FALSE;
@@ -41,15 +45,15 @@ gint main(gint argc, gchar* argv[]) {
 	gchar* variables = NULL;
 	gchar* token = NULL;
 	gchar* query_file = NULL;
-	gchar** query = NULL;
+	gchar** query_strings = NULL;
 
 	GOptionEntry main_entries[] = {
 		{ "version", 'v', 0, G_OPTION_ARG_NONE, &version, "Show program version" },
 		{ "subscribe", 's', 0, G_OPTION_ARG_NONE, &subscribe, "Create subscription" },
 		{ "token", 't', 0, G_OPTION_ARG_STRING, &token, "Set connect.sid cookie" },
-		{ "variables", 'j', 0, G_OPTION_ARG_STRING, &variables, "Include variables" },
+		{ "variables", 'r', 0, G_OPTION_ARG_STRING, &variables, "Include variables" },
 		{ "query", 'f', 0, G_OPTION_ARG_FILENAME, &query_file, "Read query from file" },
-		{ G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, &query },
+		{ G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, &query_strings },
 		{ NULL }
 	};
 
@@ -65,7 +69,7 @@ gint main(gint argc, gchar* argv[]) {
 	}
 
 	if (version) {
-		if (subscribe || variables || token || query_file || query) {
+		if (subscribe || variables || token || query_file || query_strings) {
 			g_printerr("%s\n", "Cannot specify --version with other options");
 			return EXIT_FAILURE;
 		}
@@ -74,7 +78,69 @@ gint main(gint argc, gchar* argv[]) {
 		return EXIT_SUCCESS;
 	}
 
-	// todo: functionality
+	if (token == NULL) {
+		do {
+			token = g_getenv("REPLIT_TOKEN");
+			if (token != NULL) break;
+
+			token = g_getenv("CONNECT_SID");
+			if (token != NULL) break;
+
+			g_printerr("%s\n", "No token provided and no variable found");
+			return EXIT_FAILURE;
+		} while (0);
+	}
+
+	gchar* query;
+
+	if (query_strings != NULL) {
+		if (query_strings[1] != NULL) {
+			g_printerr("%s\n", "At most one query may be specified");
+			return EXIT_FAILURE;
+		}
+
+		query = query_strings[0];
+	} else if (query_file != NULL) {
+		if (!g_file_get_contents(query_file, &query, NULL, &error)) {
+			g_printerr("%s\n", error->message);
+			return EXIT_FAILURE;
+		}
+	} else {
+		g_printerr("%s\n", "At least one query must be specified");
+		return EXIT_FAILURE;
+	}
+
+	JsonNode* variables_json = NULL;
+
+	if (variables != NULL) {
+		JsonParser* parser = json_parser_new();
+
+		if (!json_parser_load_from_data(parser, variables, -1, error)) {
+			g_printerr("%s\n", error->message);
+			return EXIT_FAILURE;
+		}
+
+		variables_json = json_parser_get_root(parser);
+	}
+
+	ReplitClient* client = replit_client_new(token);
+
+	if (subscribe) {
+		//
+	} else {
+		JsonNode* res = replit_client_query(client, query, variables_json, error);
+
+		if (res == NULL) {
+			g_printerr("%s\n", error->message);
+			return EXIT_FAILURE;
+		} else {
+			output_response(res);
+		}
+	}
 
 	return EXIT_SUCCESS;
+}
+
+void output_response(JsonNode* res) {
+	// TODO
 }
