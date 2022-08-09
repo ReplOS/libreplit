@@ -83,10 +83,10 @@ gint main(gint argc, gchar* argv[]) {
 
 	if (token == NULL) {
 		do {
-			token = g_getenv("REPLIT_TOKEN");
+			token = g_strdup(g_getenv("REPLIT_TOKEN"));
 			if (token != NULL) break;
 
-			token = g_getenv("CONNECT_SID");
+			token = g_strdup(g_getenv("CONNECT_SID"));
 			if (token != NULL) break;
 
 			g_printerr("%s\n", "No token provided and no variable found");
