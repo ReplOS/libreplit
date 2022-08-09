@@ -2,16 +2,16 @@ rquery_sources = [
 	'main.c',
 ]
 
-rquery_deps = [
-	dependency('glib-2.0'),
-	dependency('json-glib-1.0', version: '>= 1.6'),
-]
-
 if get_option('rquery')
+	rquery_deps = [
+		dependency('glib-2.0'),
+		dependency('json-glib-1.0', version: '>= 1.6'),
+		dependency('libreplit-0.1'),
+	]
+
 	executable('rquery', rquery_sources,
 		c_args: ['-Wno-missing-field-initializers'],
 		dependencies: rquery_deps,
 		install: true,
-		link_with: [libreplit],
 	)
 endif
