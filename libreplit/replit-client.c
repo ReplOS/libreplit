@@ -109,13 +109,12 @@ ReplitClient* replit_client_new(const gchar* token) {
 
 	soup_session_add_feature(session, SOUP_SESSION_FEATURE (jar));
 
-	return g_object_new(
-		REPLIT_TYPE_CLIENT,
-		"token", g_strdup(token),
-		"session", session,
-		"jar", jar,
-		NULL
-	);
+	ReplitClient* self = g_object_new(REPLIT_TYPE_CLIENT, NULL);
+	self->token = g_strdup(token);
+	self->session = session;
+	self->jar = jar;
+
+	return self;
 }
 
 /**
