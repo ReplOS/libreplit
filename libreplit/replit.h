@@ -35,6 +35,7 @@ G_BEGIN_DECLS
 
 #define REPLIT_INSIDE
 #include "replit-client.h"
+#include "replit-subscriber.h"
 #include "replit-version.h"
 #undef REPLIT_INSIDE
 
